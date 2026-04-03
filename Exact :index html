@@ -3,38 +3,18 @@
 <head>
   <title>Business Express</title>
 </head>
-<body>
-  <h2>Business Express</h2>
+<body style="font-family: Arial; text-align:center; margin-top:100px;">
+  <h1>Business Express 🚀</h1>
+  <p>Your app is now live!</p>
 
-  <input id="email" placeholder="Email"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
+  <h2>Login</h2>
+  <input type="email" placeholder="Email"><br><br>
+  <input type="password" placeholder="Password"><br><br>
+  <button>Login</button>
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-  <script>
-    const supabase = supabase.createClient(
-      https://ivprogbofwetirjrvgux.supabase.co
-    , sb_publishable_XSPwDGRa584xop-M1Ej_pA_qIz5CsN9"
-    );
-
-    async function signup() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (!error) alert("Signup successful");
-    }
-
-    async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error) alert("Login successful");
-    }
-  </script>
+  <h2>Sign Up</h2>
+  <input type="email" placeholder="Email"><br><br>
+  <input type="password" placeholder="Password"><br><br>
+  <button>Sign Up</button>
 </body>
 </html>
