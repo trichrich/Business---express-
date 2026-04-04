@@ -1,40 +1,144 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Business Express</title>
-</head>
-<body>
-  <h2>Business Express</h2>
+import React, { useEffect, useMemo, useState } from "react"; import { motion } from "framer-motion"; import { createClient } from "@supabase/supabase-js"; import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Badge } from "@/components/ui/badge"; import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; import { ShoppingCart, Wifi, Wallet, LayoutDashboard, ShieldCheck, LogOut, User, Phone } from "lucide-react";
 
-  <input id="email" placeholder="Email"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
+const supabaseUrl = "https://ivprogbofwetirjrvgux.supabase.co"; const supabaseAnonKey = "sb_publishable_XSPwDGRa584xop-M1Ej_pA_qIz5CsN9"; const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
+const packages = [ { id: 1, name: "Daily Lite", volume: "1 GB", price: "GHS 5", tag: "Fast top-up" }, { id: 2, name: "Weekly Smart", volume: "5 GB", price: "GHS 20", tag: "Popular" }, { id: 3, name: "Power User", volume: "10 GB", price: "GHS 35", tag: "Best value" }, { id: 4, name: "Business Max", volume: "25 GB", price: "GHS 75", tag: "Teams" }, ];
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+function StatCard({ title, value, icon: Icon, hint }) { return ( <Card className="rounded-2xl shadow-sm border-0 bg-white/80 backdrop-blur"> <CardContent className="p-5"> <div className="flex items-center justify-between"> <div> <p className="text-sm text-slate-500">{title}</p> <h3 className="text-2xl font-bold mt-1 text-slate-900">{value}</h3> <p className="text-xs text-slate-500 mt-1">{hint}</p> </div> <div className="p-3 rounded-2xl bg-slate-100"> <Icon className="w-5 h-5 text-slate-700" /> </div> </div> </CardContent> </Card> ); }
 
-  <script>
-    const supabase = supabase.createClient(
-      https://ivprogbofwetirjrvgux.supabase.co
-    , sb_publishable_XSPwDGRa584xop-M1Ej_pA_qIz5CsN9"
-    );
+function PackageCard({ item, onBuy }) { return ( <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}> <Card className="rounded-2xl shadow-sm border-0 h-full"> <CardHeader className="pb-3"> <div className="flex items-center justify-between"> <CardTitle className="text-lg">{item.name}</CardTitle> <Badge className="rounded-full">{item.tag}</Badge> </div> </CardHeader> <CardContent className="space-y-4"> <div> <p className="text-3xl font-bold text-slate-900">{item.volume}</p> <p className="text-slate-500">{item.price}</p> </div> <Button className="w-full rounded-xl" onClick={() => onBuy(item)}> <ShoppingCart className="w-4 h-4 mr-2" /> Buy Package </Button> </CardContent> </Card> </motion.div> ); }
 
-    async function signup() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+export default function App() { const [session, setSession] = useState(null); const [loading, setLoading] = useState(true); const [authMode, setAuthMode] = useState("login"); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [fullName, setFullName] = useState(""); const [phone, setPhone] = useState(""); const [message, setMessage] = useState(""); const [selectedPackage, setSelectedPackage] = useState(null);
 
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (!error) alert("Signup successful");
-    }
+useEffect(() => { let mounted = true;
 
-    async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+supabase.auth.getSession().then(({ data }) => {
+  if (mounted) {
+    setSession(data.session ?? null);
+    setLoading(false);
+  }
+});
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error) alert("Login successful");
-    }
-  </script>
-</body>
-</html>
+const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+  setSession(session ?? null);
+});
+
+return () => {
+  mounted = false;
+  listener.subscription.unsubscribe();
+};
+
+}, []);
+
+const userEmail = useMemo(() => session?.user?.email || "guest@demo.app", [session]);
+
+const handleAuth = async () => { setMessage(""); try { if (authMode === "signup") { const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName, phone }, }, }); if (error) throw error; setMessage("Account created. Check your email for confirmation if enabled."); } else { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw error; setMessage("Login successful."); } } catch (error) { setMessage(error.message || "Something went wrong."); } };
+
+const handleLogout = async () => { await supabase.auth.signOut(); setMessage("Logged out."); };
+
+const handleBuy = (item) => { setSelectedPackage(item); setMessage(Selected ${item.name}. Connect your payment gateway next.); };
+
+if (loading) { return <div className="min-h-screen grid place-items-center text-lg font-medium">Loading app...</div>; }
+
+if (!session) { return ( <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 md:p-8"> <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center min-h-[90vh]"> <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}> <Badge className="rounded-full px-4 py-1 mb-4">Tony Rich Data Express</Badge> <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight"> Bigger business starts with a stronger data app. </h1> <p className="mt-5 text-lg text-slate-600 max-w-xl"> Sell data bundles, manage customers, track payments, and grow with a clean business dashboard. </p> <div className="grid sm:grid-cols-3 gap-4 mt-8"> <StatCard title="Fast Checkout" value="24/7" icon={Wallet} hint="Payment-ready flow" /> <StatCard title="Customer Access" value="Secure" icon={ShieldCheck} hint="Supabase auth" /> <StatCard title="Business Control" value="Live" icon={LayoutDashboard} hint="Smart dashboard" /> </div> </motion.div>
+
+<motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="rounded-[28px] border-0 shadow-xl bg-white/90 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <p className="text-slate-500">Create an account or log in to your business portal.</p>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={authMode} onValueChange={setAuthMode} className="w-full">
+              <TabsList className="grid grid-cols-2 w-full rounded-2xl">
+                <TabsTrigger value="login" className="rounded-xl">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="rounded-xl">Sign Up</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login" className="space-y-4 mt-6">
+                <Input placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Button className="w-full rounded-xl" onClick={handleAuth}>Log In</Button>
+              </TabsContent>
+
+              <TabsContent value="signup" className="space-y-4 mt-6">
+                <Input placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <Input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <Input placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input type="password" placeholder="Create password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Button className="w-full rounded-xl" onClick={handleAuth}>Create Account</Button>
+              </TabsContent>
+            </Tabs>
+
+            {message ? (
+              <div className="mt-4 text-sm rounded-xl bg-slate-100 px-4 py-3 text-slate-700">{message}</div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  </div>
+);
+
+}
+
+return ( <div className="min-h-screen bg-slate-100 p-4 md:p-8"> <div className="max-w-7xl mx-auto space-y-8"> <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"> <div> <Badge className="rounded-full mb-3">Business Dashboard</Badge> <h1 className="text-3xl md:text-4xl font-black text-slate-900">Tony Rich Data Express</h1> <p className="text-slate-600 mt-2">Manage sales, packages, users, and top-ups from one place.</p> </div> <div className="flex gap-3 flex-wrap"> <Badge variant="secondary" className="rounded-full px-4 py-2"> <User className="w-4 h-4 mr-2" /> {userEmail} </Badge> <Button variant="outline" className="rounded-xl" onClick={handleLogout}> <LogOut className="w-4 h-4 mr-2" /> Logout </Button> </div> </div>
+
+<div className="grid md:grid-cols-3 gap-5">
+      <StatCard title="Total Sales" value="GHS 0" icon={Wallet} hint="Connect your orders table" />
+      <StatCard title="Active Customers" value="0" icon={User} hint="Connect profiles table" />
+      <StatCard title="Bundles Sold" value="0" icon={Wifi} hint="Track completed purchases" />
+    </div>
+
+    <div className="grid lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2">
+        <Card className="rounded-3xl border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Available Data Packages</CardTitle>
+            <p className="text-slate-500">This is the customer purchase section.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4">
+              {packages.map((item) => (
+                <PackageCard key={item.id} item={item} onBuy={handleBuy} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="rounded-3xl border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full rounded-xl justify-start"><Phone className="w-4 h-4 mr-2" /> Add Customer</Button>
+            <Button variant="outline" className="w-full rounded-xl justify-start"><Wallet className="w-4 h-4 mr-2" /> Record Payment</Button>
+            <Button variant="outline" className="w-full rounded-xl justify-start"><LayoutDashboard className="w-4 h-4 mr-2" /> View Reports</Button>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle>Selected Package</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedPackage ? (
+              <div className="space-y-2">
+                <p className="text-xl font-bold">{selectedPackage.name}</p>
+                <p className="text-slate-600">Volume: {selectedPackage.volume}</p>
+                <p className="text-slate-600">Price: {selectedPackage.price}</p>
+                <Button className="w-full rounded-xl mt-3">Proceed to Payment</Button>
+              </div>
+            ) : (
+              <p className="text-slate-500">Choose a package to continue.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </div>
+</div>
+
+); }
